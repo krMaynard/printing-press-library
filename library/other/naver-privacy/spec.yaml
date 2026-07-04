@@ -1,0 +1,363 @@
+openapi: "3.0.3"
+info:
+  title: Naver Privacy
+  version: "2026-07-01"
+  description: |
+    The Naver Privacy Center content API, reverse-engineered from the public
+    privacy.naver.com Next.js app. Naver was the first South Korean company to
+    publish a transparency report (January 2015) and publishes semiannual
+    statistics on government requests for user data going back to 2012 —
+    search & seizure warrants, communication user information (구 통신자료),
+    communication-restricting measures, and communication confirmation data
+    (log records) — as machine-readable JSON.
+
+    The app prefetches every page through an unauthenticated CMS API:
+
+    - `GET /api/pages/{pageCode}` returns a page's content. For pageCode
+      `TRANSPARENCY_REPORT_STATISTICS` the `specificAreaJson.statistics` array
+      carries the full half-year statistics series (request/processing/
+      provided/average counts and compliance rates per request category, one
+      entry per half-year since 2012).
+    - `GET /api/pages/intro/{introCode}` returns a section's intro blurb
+      (e.g. `REPORT` for the transparency-report section).
+    - `GET /api/notices` lists Privacy Center notices (paginated with
+      0-indexed `page` and `size`); `GET /api/notices/{noticeId}` returns one
+      notice with prev/next links.
+
+    All endpoints are Korean-language and unauthenticated. Invalid page or
+    intro codes return HTTP 400 with `{"errorCode": "BAD_REQUEST", ...}`.
+
+    Known transparency-related page codes: `TRANSPARENCY_REPORT_STATISTICS`
+    (the statistics series), `WHAT_IS_THE_TRANSPARENCY_REPORT` (methodology),
+    `PROTECTING_NAVER_S_COMMUNICATION_SECRETS`,
+    `VERIFICATION_OF_COMMUNICATION_SECRET_PROTECTION_WORK`, and
+    `NAVER_REPORT` (the NAVER Privacy Report / whitepaper library, whose
+    `specificAreaJson.privacyWhitepapers` lists downloadable publications).
+    Page codes are CMS-managed strings, not a closed set.
+  contact:
+    name: Naver Privacy Center
+    url: https://privacy.naver.com
+
+servers:
+  - url: https://privacy.naver.com
+    description: Naver Privacy Center (public, no authentication)
+
+security: []
+
+tags:
+  - name: pages
+    description: >-
+      CMS pages and section intros — including the transparency-report
+      statistics series carried by the TRANSPARENCY_REPORT_STATISTICS page.
+  - name: notices
+    description: Privacy Center notices.
+
+paths:
+  /api/pages/{pageCode}:
+    get:
+      operationId: getPage
+      summary: Get a Privacy Center page by code
+      description: |
+        Returns a CMS page's rendered HTML plus its structured
+        `specificAreaJson` payload. For `TRANSPARENCY_REPORT_STATISTICS` the
+        payload's `statistics` array is the full transparency-report series:
+        one entry per half-year since 2012, each carrying request, processing,
+        provided-item, and per-request-average counts plus compliance rates
+        for search & seizure warrants, communication user information,
+        communication-restricting measures, and communication confirmation
+        data.
+      tags: [pages]
+      parameters:
+        - name: pageCode
+          in: path
+          required: true
+          description: >-
+            CMS page code, e.g. TRANSPARENCY_REPORT_STATISTICS,
+            WHAT_IS_THE_TRANSPARENCY_REPORT, NAVER_REPORT.
+          schema:
+            type: string
+            example: TRANSPARENCY_REPORT_STATISTICS
+      responses:
+        "200":
+          description: Page content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        "400":
+          description: Unknown page code.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /api/pages/intro/{introCode}:
+    get:
+      operationId: getPageIntro
+      summary: Get a section intro
+      description: >-
+        Returns the intro blurb (title, text, hero image) for a Privacy
+        Center section. `REPORT` is the transparency-report section;
+        `ACTIVITY` is the protection-activities section.
+      tags: [pages]
+      parameters:
+        - name: introCode
+          in: path
+          required: true
+          description: Section intro code, e.g. REPORT or ACTIVITY.
+          schema:
+            type: string
+            example: REPORT
+      responses:
+        "200":
+          description: Section intro.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageIntro"
+        "400":
+          description: Unknown intro code.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /api/notices:
+    get:
+      operationId: listNotices
+      summary: List Privacy Center notices
+      description: Returns notices, newest first. Paginated with 0-indexed page and size.
+      tags: [notices]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: 0-indexed page number.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          description: Page size (number of notices per page).
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Notice list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoticeList"
+
+  /api/notices/{noticeId}:
+    get:
+      operationId: getNotice
+      summary: Get a notice
+      description: Returns one notice with its full HTML body and prev/next navigation stubs.
+      tags: [notices]
+      parameters:
+        - name: noticeId
+          in: path
+          required: true
+          description: Numeric notice id.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notice detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoticeDetail"
+
+components:
+  schemas:
+    Page:
+      type: object
+      description: A CMS page.
+      properties:
+        id:
+          type: integer
+          description: Internal page id.
+        contentHtml:
+          type: string
+          description: Rendered page body HTML (may be empty for data-only pages).
+        contentCss:
+          type: string
+          description: Page-scoped CSS.
+        specificAreaJson:
+          type: object
+          nullable: true
+          description: >-
+            Structured page payload; shape varies by page. For
+            TRANSPARENCY_REPORT_STATISTICS it is
+            {"statistics": [TransparencyStatistic, ...]} (see the
+            TransparencyStatistic schema). For NAVER_REPORT it is
+            {"privacyWhitepapers": [...]} listing downloadable publications.
+          additionalProperties: true
+        cssResourcePaths:
+          type: array
+          items:
+            type: string
+        jsResourcePaths:
+          type: array
+          items:
+            type: string
+
+    TransparencyStatistic:
+      type: object
+      description: |
+        One half-year of Naver's transparency statistics, as carried in the
+        TRANSPARENCY_REPORT_STATISTICS page's specificAreaJson.statistics
+        array. All counts are strings; "-" (or "0" with a "-" rate) marks
+        categories Naver no longer complies with — Naver has not provided
+        communication user information (통신이용자정보, 구 통신자료) since
+        October 2012. The four category prefixes are: warrant (압수수색영장,
+        search & seizure warrants), commData (통신이용자정보, communication
+        user information), commRestriction (통신제한조치,
+        communication-restricting measures), and commConfirmationData
+        (통신사실확인자료, communication confirmation data / log records).
+      properties:
+        id:
+          type: string
+          description: UUID of the statistics entry.
+        year:
+          type: integer
+          description: Report year.
+          example: 2025
+        period:
+          type: string
+          description: Half-year label — "상반기" (first half) or "하반기" (second half).
+          enum: ["상반기", "하반기"]
+        guideEditorHtml:
+          type: string
+          description: Narrative commentary for the half-year, as HTML.
+        warrantRequestCount:
+          type: string
+          description: Search & seizure warrants received.
+        warrantProcessingCount:
+          type: string
+          description: Search & seizure warrants processed (complied with).
+        warrantProvideCount:
+          type: string
+          description: Items of personal information provided under warrants.
+        warrantAverageCount:
+          type: string
+          description: Average items provided per processed warrant.
+        warrantRate:
+          type: string
+          description: Warrant compliance rate, percent.
+        commDataRequestCount:
+          type: string
+          description: Communication user information (구 통신자료) requests received.
+        commDataProcessingCount:
+          type: string
+          description: Communication user information requests processed (0 since October 2012).
+        commDataProvideCount:
+          type: string
+          description: Items provided ("-" since provision stopped).
+        commDataAverageCount:
+          type: string
+          description: Average items per processed request ("-" since provision stopped).
+        commDataRate:
+          type: string
+          description: Compliance rate, percent ("-" since provision stopped).
+        commRestrictionRequestCount:
+          type: string
+          description: Communication-restricting measure requests received.
+        commRestrictionProcessingCount:
+          type: string
+          description: Communication-restricting measures processed.
+        commRestrictionProvideCount:
+          type: string
+          description: Items provided under communication-restricting measures.
+        commRestrictionAverageCount:
+          type: string
+          description: Average items per processed measure.
+        commRestrictionRate:
+          type: string
+          description: Compliance rate, percent.
+        commConfirmationDataRequestCount:
+          type: string
+          description: Communication confirmation data (log record) requests received.
+        commConfirmationDataProcessingCount:
+          type: string
+          description: Communication confirmation data requests processed.
+        commConfirmationDataProvideCount:
+          type: string
+          description: Log records provided.
+        commConfirmationDataAverageCount:
+          type: string
+          description: Average log records per processed request.
+        commConfirmationDataRate:
+          type: string
+          description: Compliance rate, percent.
+
+    PageIntro:
+      type: object
+      description: A section intro blurb.
+      properties:
+        introTitle:
+          type: string
+          example: "투명성 보고서"
+        introText:
+          type: string
+        introImageUrl:
+          type: string
+          description: Hero image URL (privacy-naver-phinf.pstatic.net CDN).
+
+    NoticeList:
+      type: object
+      properties:
+        notices:
+          type: array
+          items:
+            $ref: "#/components/schemas/NoticeSummary"
+        total:
+          type: integer
+          description: Total notice count across all pages.
+
+    NoticeSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        contentHtml:
+          type: string
+          description: Notice body HTML.
+        visibleAt:
+          type: string
+          description: Publication timestamp (naive ISO 8601, KST).
+          example: "2026-03-05T00:00:00"
+        isShared:
+          type: boolean
+
+    NoticeDetail:
+      allOf:
+        - $ref: "#/components/schemas/NoticeSummary"
+        - type: object
+          properties:
+            prevNotice:
+              type: object
+              nullable: true
+              description: Previous (older) notice stub, or null.
+              additionalProperties: true
+            nextNotice:
+              type: object
+              nullable: true
+              description: Next (newer) notice stub, or null.
+              additionalProperties: true
+
+    ApiError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: BAD_REQUEST
+        errorMessage:
+          type: string
