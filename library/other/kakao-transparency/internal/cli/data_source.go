@@ -597,6 +597,11 @@ func resolveLocal(ctx context.Context, flags *rootFlags, hintWriter io.Writer, r
 	// Get by ID — extract the last path segment as the ID
 	parts := strings.Split(strings.TrimRight(path, "/"), "/")
 	id := parts[len(parts)-1]
+	// Transparency reports are keyed by the composite year-halfYearId id that
+	// store.ExtractResourceID builds, mirroring the /{year}/{halfYearId} path.
+	if resourceType == "transparency" && len(parts) >= 2 {
+		id = parts[len(parts)-2] + "-" + parts[len(parts)-1]
+	}
 
 	item, err := db.Get(resourceType, id)
 	if err != nil {

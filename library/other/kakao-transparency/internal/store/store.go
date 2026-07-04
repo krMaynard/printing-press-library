@@ -1045,6 +1045,22 @@ var resourceParentKeyColumns = map[string]string{}
 // Callers that need to gate best-effort writes can use this to avoid passing
 // non-entity envelopes into the batch path.
 func ExtractResourceID(resourceType string, obj map[string]any) string {
+	// Transparency reports carry no id/uuid field; a report is identified by
+	// its period. Key on year + halfYearId so cached reports do not collide
+	// and offline period lookups can reconstruct the same composite id. The
+	// cached row is the API's {success, data} envelope, so the period fields
+	// may sit one level down.
+	if resourceType == "transparency" {
+		src := obj
+		if nested, ok := obj["data"].(map[string]any); ok {
+			src = nested
+		}
+		year := ResourceIDString(LookupFieldValue(src, "year"))
+		half := ResourceIDString(LookupFieldValue(src, "half_year_id"))
+		if year != "" && year != "<nil>" && half != "" && half != "<nil>" {
+			return year + "-" + half
+		}
+	}
 	if override, ok := resourceIDFieldOverrides[resourceType]; ok && override != "" {
 		if v := lookupFieldValue(obj, override); v != nil {
 			s := ResourceIDString(v)
