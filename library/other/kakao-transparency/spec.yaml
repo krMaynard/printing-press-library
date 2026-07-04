@@ -26,9 +26,12 @@ info:
 
     Coverage note: requesting a year/half-year outside the published range
     (before 1H 2012 or after the latest report) returns the site's HTML error
-    page with HTTP 200, not a JSON error — clients should verify the response
-    is JSON with `success: true`. Use `prevYn`/`nextYn` (1 = exists, 0 = end
-    of range) to walk the archive safely.
+    page — observed as both HTTP 200 and HTTP 500 — never a JSON error.
+    Clients should verify the response is JSON with `success: true` and use
+    `prevYn`/`nextYn` (1 = exists, 0 = end of range) to walk the archive
+    without touching unpublished periods. The row-level count fields are
+    strings in the Korean payload but bare numbers in the English payload;
+    parse both.
   contact:
     name: Kakao Privacy
     url: https://privacy.kakao.com/transparency
@@ -195,19 +198,30 @@ components:
           type: string
           description: Row-level half-year id, as a string (may be "0" in row payloads — use the envelope's halfYearId).
         numberOfRequests:
-          type: string
-          description: Number of government requests received, as a string (no thousands separators).
+          description: >-
+            Number of government requests received. Language-dependent typing:
+            a string ("517") in the Korean payload, a bare number (517) in the
+            English (Accept-Language: en) payload — clients must accept both.
+          oneOf:
+            - type: string
+            - type: integer
           example: "517"
         numberOfProcesses:
-          type: string
           description: >-
-            Number of requests processed (complied with), as a string. "-1"
+            Number of requests processed (complied with). Same
+            language-dependent string/number typing as numberOfRequests; -1
             renders as "N/A" on the site.
+          oneOf:
+            - type: string
+            - type: integer
         numberOfAccounts:
-          type: string
           description: >-
-            Number of accounts/IDs affected, as a string. "-1" renders as
-            "N/A" on the site.
+            Number of accounts/IDs affected. Same language-dependent
+            string/number typing as numberOfRequests; -1 renders as "N/A" on
+            the site.
+          oneOf:
+            - type: string
+            - type: integer
         content:
           type: string
           description: Localized narrative attached to the row (usually only on the first row).

@@ -12,7 +12,6 @@
   "owner": "krmaynard",
   "printer": "krMaynard",
   "printer_name": "Kieran Maynard",
-  "spec_url": "https://raw.githubusercontent.com/krMaynard/transparency-api-cli/main/catalog/specs/naver-privacy.yaml",
   "spec_path": "naver-privacy.yaml",
   "spec_format": "openapi3",
   "spec_checksum": "sha256:571ee8e20ca802d4ef65573d111a0a7125d8b678bc49bb3c64035b8ccc31ac0c",
