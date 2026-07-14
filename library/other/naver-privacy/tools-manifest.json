@@ -1,0 +1,82 @@
+{
+  "api_name": "naver-privacy",
+  "base_url": "https://privacy.naver.com",
+  "description": "The Naver Privacy Center content API, reverse-engineered from the public\nprivacy.naver.com Next.js app. Naver was the first South Korean company to\npublish a transparency report (January 2015) and publishes semiannual\nstatistics on government requests for user data going back to 2012 —\nsearch \u0026 seizure warrants, communication user information (구 통신자료),\ncommunication-restricting measures, and communication confirmation data\n(log records) — as machine-readable JSON.\n\nThe app prefetches every page through an unauthenticated CMS API:\n\n- `GET /api/pages/{pageCode}` returns a page's content. For pageCode\n  `TRANSPARENCY_REPORT_STATISTICS` the `specificAreaJson.statistics` array\n  carries the full half-year statistics series (request/processing/\n  provided/average counts and compliance rates per request category, one\n  entry per half-year since 2012).\n- `GET /api/pages/intro/{introCode}` returns a section's intro blurb\n  (e.g. `REPORT` for the transparency-report section).\n- `GET /api/notices` lists Privacy Center notices (paginated with\n  0-indexed `page` and `size`); `GET /api/notices/{noticeId}` returns one\n  notice with prev/next links.\n\nAll endpoints are Korean-language and unauthenticated. Invalid page or\nintro codes return HTTP 400 with `{\"errorCode\": \"BAD_REQUEST\", ...}`.\n\nKnown transparency-related page codes: `TRANSPARENCY_REPORT_STATISTICS`\n(the statistics series), `WHAT_IS_THE_TRANSPARENCY_REPORT` (methodology),\n`PROTECTING_NAVER_S_COMMUNICATION_SECRETS`,\n`VERIFICATION_OF_COMMUNICATION_SECRET_PROTECTION_WORK`, and\n`NAVER_REPORT` (the NAVER Privacy Report / whitepaper library, whose\n`specificAreaJson.privacyWhitepapers` lists downloadable publications).\nPage codes are CMS-managed strings, not a closed set.",
+  "mcp_ready": "full",
+  "http_transport": "standard",
+  "auth": {
+    "type": "none"
+  },
+  "required_headers": [],
+  "tools": [
+    {
+      "name": "notices_get",
+      "description": "Returns one notice with its full HTML body and prev/next navigation stubs. Required: noticeId.",
+      "method": "GET",
+      "path": "/api/notices/{noticeId}",
+      "no_auth": true,
+      "params": [
+        {
+          "name": "noticeId",
+          "type": "int",
+          "location": "path",
+          "description": "Numeric notice id.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "notices_list",
+      "description": "Returns notices, newest first. Paginated with 0-indexed page and size. Optional: page (default: 0), size.",
+      "method": "GET",
+      "path": "/api/notices",
+      "no_auth": true,
+      "params": [
+        {
+          "name": "page",
+          "type": "int",
+          "location": "query",
+          "description": "0-indexed page number."
+        },
+        {
+          "name": "size",
+          "type": "int",
+          "location": "query",
+          "description": "Page size (number of notices per page)."
+        }
+      ]
+    },
+    {
+      "name": "pages_get",
+      "description": "Returns a CMS page's rendered HTML plus its structured `specificAreaJson` payload. For `TRANSPARENCY_REPORT_STATISTICS` the payload's `statistics` array is the full transparency-report series: one entry per half-year since 2012, each carrying request, processing, provided-item, and per-request-average counts plus compliance rates for search \u0026 seizure warrants, communication user information, communication-restricting measures, and communication confirmation data. Required: pageCode.",
+      "method": "GET",
+      "path": "/api/pages/{pageCode}",
+      "no_auth": true,
+      "params": [
+        {
+          "name": "pageCode",
+          "type": "string",
+          "location": "path",
+          "description": "CMS page code, e.g. TRANSPARENCY_REPORT_STATISTICS, WHAT_IS_THE_TRANSPARENCY_REPORT, NAVER_REPORT.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "pages_get-intro",
+      "description": "Returns the intro blurb (title, text, hero image) for a Privacy Center section. `REPORT` is the transparency-report section; `ACTIVITY` is the protection-activities section. Required: introCode.",
+      "method": "GET",
+      "path": "/api/pages/intro/{introCode}",
+      "no_auth": true,
+      "params": [
+        {
+          "name": "introCode",
+          "type": "string",
+          "location": "path",
+          "description": "Section intro code, e.g. REPORT or ACTIVITY.",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

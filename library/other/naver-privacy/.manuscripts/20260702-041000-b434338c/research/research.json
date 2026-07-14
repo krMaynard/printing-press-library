@@ -1,0 +1,141 @@
+{
+  "api_name": "naver-privacy",
+  "novelty_score": 9,
+  "alternatives": [],
+  "gaps": [
+    "No existing CLI or SDK exposes Naver's transparency-report statistics; the series is embedded in the Privacy Center's CMS page payload and otherwise only visible in the browser",
+    "The statistics arrive as one raw JSON blob per page — there is no per-category or per-period query surface"
+  ],
+  "patterns": [
+    "Transparency dashboards elsewhere (Google, Kakao) expose one period at a time; Naver ships the entire series in a single CMS payload, which favors local tidying over repeated calls"
+  ],
+  "recommendation": "proceed",
+  "researched_at": "2026-07-02T04:05:00Z",
+  "novel_features": [
+    {
+      "name": "Tidy statistics series",
+      "command": "statistics",
+      "description": "The full 2012-present transparency series as one tidy table — one row per half-year and request category with request/processed/provided/average counts and compliance rates.",
+      "rationale": "The raw endpoint returns 28 wide entries with 24 cryptic per-category columns each; the CLI reshapes them into the long-form rows analysis tools expect and decodes the category prefixes into readable names.",
+      "example": "naver-privacy-pp-cli statistics --category warrant --csv",
+      "why_it_matters": "Reach for this for any question about Naver's government data-request trends — it replaces hand-parsing specificAreaJson.",
+      "group": "Whole-archive analytics"
+    },
+    {
+      "name": "Whitepaper library index",
+      "command": "whitepapers",
+      "description": "List the NAVER Privacy Report and privacy-whitepaper publications (titles, authors, attached documents) from the report library.",
+      "rationale": "The publication list lives inside the NAVER_REPORT page's specificAreaJson; the CLI surfaces it as a flat list agents can search and cite.",
+      "example": "naver-privacy-pp-cli whitepapers --agent",
+      "why_it_matters": "Use this to find Naver's own published analyses and the downloadable report documents behind the statistics.",
+      "group": "Whole-archive analytics"
+    },
+    {
+      "name": "Half-year narrative summaries",
+      "command": "summaries",
+      "description": "Naver's own per-half-year commentary on the statistics, HTML-stripped to plain text.",
+      "rationale": "Each statistics entry carries a guideEditorHtml narrative that explains anomalies (mergers, warrant spikes); the CLI extracts it as readable text next to the period it explains.",
+      "example": "naver-privacy-pp-cli summaries --year 2025",
+      "why_it_matters": "Use this before interpreting a spike or drop in the numbers — Naver usually explains it in the period's own commentary.",
+      "group": "Whole-archive analytics"
+    }
+  ],
+  "novel_features_built": [
+    {
+      "name": "Tidy statistics series",
+      "command": "statistics",
+      "description": "The full 2012-present transparency series as one tidy table — one row per half-year and request category with request/processed/provided/average counts and compliance rates.",
+      "rationale": "The raw endpoint returns 28 wide entries with 24 cryptic per-category columns each; the CLI reshapes them into the long-form rows analysis tools expect and decodes the category prefixes into readable names.",
+      "example": "naver-privacy-pp-cli statistics --category warrant --csv",
+      "why_it_matters": "Reach for this for any question about Naver's government data-request trends — it replaces hand-parsing specificAreaJson.",
+      "group": "Whole-archive analytics"
+    },
+    {
+      "name": "Whitepaper library index",
+      "command": "whitepapers",
+      "description": "List the NAVER Privacy Report and privacy-whitepaper publications (titles, authors, attached documents) from the report library.",
+      "rationale": "The publication list lives inside the NAVER_REPORT page's specificAreaJson; the CLI surfaces it as a flat list agents can search and cite.",
+      "example": "naver-privacy-pp-cli whitepapers --agent",
+      "why_it_matters": "Use this to find Naver's own published analyses and the downloadable report documents behind the statistics.",
+      "group": "Whole-archive analytics"
+    },
+    {
+      "name": "Half-year narrative summaries",
+      "command": "summaries",
+      "description": "Naver's own per-half-year commentary on the statistics, HTML-stripped to plain text.",
+      "rationale": "Each statistics entry carries a guideEditorHtml narrative that explains anomalies (mergers, warrant spikes); the CLI extracts it as readable text next to the period it explains.",
+      "example": "naver-privacy-pp-cli summaries --year 2025",
+      "why_it_matters": "Use this before interpreting a spike or drop in the numbers — Naver usually explains it in the period's own commentary.",
+      "group": "Whole-archive analytics"
+    }
+  ],
+  "narrative": {
+    "display_name": "Naver Privacy",
+    "headline": "Naver's transparency-report series — Korea's first, published since 2015 — as tidy per-category statistics instead of a CMS page blob.",
+    "value_prop": "The Naver Privacy Center ships its entire 2012-present government data-request series (warrants, communication data, restriction measures, log records) inside one CMS page payload. This CLI unpacks it: `statistics` emits tidy per-period, per-category rows, `summaries` extracts Naver's own commentary, and `whitepapers` indexes the downloadable NAVER Privacy Report library.",
+    "quickstart": [
+      {
+        "command": "naver-privacy-pp-cli doctor --dry-run",
+        "comment": "Verify connectivity — the API is public, no credentials needed"
+      },
+      {
+        "command": "naver-privacy-pp-cli statistics --csv",
+        "comment": "The full transparency series as tidy CSV rows"
+      },
+      {
+        "command": "naver-privacy-pp-cli pages get TRANSPARENCY_REPORT_STATISTICS",
+        "comment": "The raw CMS payload if you need every field"
+      },
+      {
+        "command": "naver-privacy-pp-cli notices list",
+        "comment": "Current Privacy Center notices"
+      }
+    ],
+    "troubleshoots": [
+      {
+        "symptom": "pages get returns 400 BAD_REQUEST",
+        "fix": "The page code is unknown to the CMS — codes are case-sensitive strings like TRANSPARENCY_REPORT_STATISTICS or NAVER_REPORT; check the code against the Privacy Center site."
+      },
+      {
+        "symptom": "Statistics cells contain '-'",
+        "fix": "'-' marks categories Naver no longer complies with (no communication user information provided since October 2012); treat it as not-applicable, not zero."
+      }
+    ],
+    "when_to_use": "Use this CLI for questions about South Korean government requests for Naver user data — warrant volumes, compliance rates, log-record requests — and for Naver's own privacy publications. It is the only machine-friendly path to the full statistics series.",
+    "anti_triggers": [
+      "Do not use it for Naver's developer APIs (search, maps, Papago, CLOVA) — this wraps only the Privacy Center content API",
+      "Do not use it for content-moderation or copyright-takedown statistics; Naver's transparency report covers government data requests only",
+      "Content is Korean-only — do not expect localized English field values"
+    ],
+    "recipes": [
+      {
+        "title": "Warrant series for charting",
+        "command": "naver-privacy-pp-cli statistics --category warrant --agent --select year,period,requests,processed,rate",
+        "explanation": "Tidy JSON of search-and-seizure warrant volumes and compliance rates per half-year since 2012, narrowed to chartable fields."
+      },
+      {
+        "title": "Why did this period spike?",
+        "command": "naver-privacy-pp-cli summaries --year 2018",
+        "explanation": "Naver's own plain-text commentary for 2018's half-years (e.g. the Camp Mobile merger's effect on the numbers)."
+      },
+      {
+        "title": "Index the report library",
+        "command": "naver-privacy-pp-cli whitepapers --agent",
+        "explanation": "Every NAVER Privacy Report / whitepaper publication with its attached document paths."
+      },
+      {
+        "title": "Raw CMS payload",
+        "command": "naver-privacy-pp-cli pages get TRANSPARENCY_REPORT_STATISTICS --agent --select specificAreaJson.statistics.year,specificAreaJson.statistics.period,specificAreaJson.statistics.warrantRequestCount",
+        "explanation": "Drop to the raw page payload and narrow it with dotted --select paths when a field is not in the tidy view."
+      }
+    ],
+    "trigger_phrases": [
+      "naver transparency report",
+      "korean government data requests naver",
+      "naver warrant statistics",
+      "naver privacy center",
+      "use naver-privacy",
+      "run naver-privacy"
+    ]
+  }
+}

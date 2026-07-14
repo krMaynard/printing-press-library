@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-02T04:14:50.893374803Z",
+  "printing_press_version": "4.24.0",
+  "api_name": "naver-privacy",
+  "display_name": "Naver Privacy",
+  "cli_name": "naver-privacy-pp-cli",
+  "creator": {
+    "handle": "krMaynard",
+    "name": "Kieran Maynard"
+  },
+  "owner": "krmaynard",
+  "printer": "krMaynard",
+  "printer_name": "Kieran Maynard",
+  "spec_path": "naver-privacy.yaml",
+  "spec_format": "openapi3",
+  "spec_checksum": "sha256:571ee8e20ca802d4ef65573d111a0a7125d8b678bc49bb3c64035b8ccc31ac0c",
+  "run_id": "20260702-041000-b434338c",
+  "catalog_entry": "naver-privacy",
+  "category": "other",
+  "description": "Naver's transparency-report series — Korea's first, published since 2015 — as tidy per-category statistics instead of a CMS page blob.",
+  "mcp_binary": "naver-privacy-pp-mcp",
+  "mcp_tool_count": 4,
+  "mcp_public_tool_count": 4,
+  "mcp_ready": "full",
+  "api_version": "2026-07-01",
+  "auth_type": "none",
+  "novel_features": [
+    {
+      "name": "Tidy statistics series",
+      "command": "statistics",
+      "description": "The full 2012-present transparency series as one tidy table — one row per half-year and request category with request/processed/provided/average counts and compliance rates."
+    },
+    {
+      "name": "Whitepaper library index",
+      "command": "whitepapers",
+      "description": "List the NAVER Privacy Report and privacy-whitepaper publications (titles, authors, attached documents) from the report library."
+    },
+    {
+      "name": "Half-year narrative summaries",
+      "command": "summaries",
+      "description": "Naver's own per-half-year commentary on the statistics, HTML-stripped to plain text."
+    }
+  ],
+  "api_language": "ko",
+  "regions": [
+    "KR"
+  ]
+}
